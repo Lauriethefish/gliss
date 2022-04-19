@@ -1,0 +1,5 @@
+.gradle/
+build/
+.idea/
+Upload.jar
+upload.ps1

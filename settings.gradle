@@ -1,0 +1,10 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url "https://papermc.io/repo/repository/maven-public/" }
+    }
+}
+
+rootProject.name = 'gliss'
+gradle.ext.versionName = '0.1.0'

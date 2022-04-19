@@ -1,0 +1,24 @@
+benchmark:
+  originPortal:
+    x: 742
+    y: 79
+    z: -795
+    world: world
+
+  destPortal:
+    x: 203
+    y: 81
+    z: -376
+    world: world_nether
+
+
+  width: 3
+  height: 3
+  projectionWidth: 13
+  projectionHeight: 7
+  wideningAmount: 0.5
+
+  ticksPerRotation: 60
+  rotationRadius: 10.0
+  ticksPerBenchmark: 200
+
