@@ -40,10 +40,39 @@ for(x in -20..20) {
 }
 ```
 
-Now this is **bad**, ***really bad***. Why?
+Now this is **bad**, ***really bad***. Why? Because block projection has to be updated every tick.
 
 - This will send 68,921 unique block change packets to the player if updated every tick.
 - This will allocate 69,921 instances of `BlockData` every tick.
 - This will crash the player. (see previous comment about 68,921 unique block change packets)
 
-As to what is good, really good, you will have to wait a bit for that one.
+The first step to improve this is to **not** send 68,921 packets per tick.
+We can do this by creating a map which stores the currently sent state of each block around the player.
+
+```kotlin
+/* Somewhere else, shared between multiple updates */
+val blockStates: MutableMap<Vector, BlockData> = HashMap()
+
+/* When we update our block state */
+val position = ...
+val renderedState = renderedBlockPos.block.blockData
+val existingState = blockStates.get(position)
+
+if(existingState != renderedState) {
+    // Store this state so it won't be sent again
+    blockStates.put(position, renderedState)
+    
+    /* Send the block update  ... */
+}
+```
+
+This still isn't great but now the projection can be viewed without crashing the player! We can make a few other improvements to this step, such as using an `Array<BlockData>` instead of the map to avoid allocating tons of `Vector`s.
+
+We're not out of the water yet though, this implementation still has some serious problems.
+
+- Previously mentioned 69,921 allocations of `BlockData` per tick.
+- We are sending a lot of blocks to the player that can't actually be seen - this implementation will change all the blocks visible in a certain range around the portal without first checking if they are fully covered by other opaque blocks.
+
+## Dodging the Bukkit API
+
+TODO
