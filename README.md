@@ -75,4 +75,31 @@ We're not out of the water yet though, this implementation still has some seriou
 
 ## Dodging the Bukkit API
 
-TODO
+The next thing we'll do is optimise the `BlockData` allocations.
+
+This is pretty easy, we can simply get the underlying NMS world for the origin and destination, and use that to get us an NMS `BlockState`. The minecraft server is actually pretty clever, and each block state is immutable and shared throughout the whole server, sort of like an enum variant.
+
+```kotlin
+val nmsWorld = (originWorld as CraftWorld).handle
+val playerConnection = (player as CraftPlayer).handle.playerConnection
+
+/* When rendering */
+var exampleState = nmsWorld.getBlockState(BlockPos(x, y, z))
+
+// Send a block update packet for this state
+playerConnection.send(ClientboundBlockUpdatePacket(/* origin block position */, exampleState))
+```
+
+With no other changes, using NMS to grab the states and sends the packets more than halves rendering times. (all results are at the bottom)
+
+But we can do better! It turns out, that `ServerLevel#getBlockState(BlockPos)` does a fair bit of extra work fetching each block, as it has to find the chunk the block is in, find the correct chunk section, *then* grab the `BlockState` from the underlying data palette - the data structure actually used to store blocks. That's a lot of method calls and as far as I know, they aren't inlined as much as I'd like them to be. 
+ 
+To improve this a little a
+further, we can create an array of the data palettes we will need to render a particular portal, then index into that array with some quick bit shifting and multiplication. I won't bore you with the details of this, but the results are all below.
+
+
+|Implementation|Average Render Time (ms, 2 dp.)|
+|-----------|-----------|
+|Basic Bukkit|1.69|
+|Basic NMS|0.62|
+|Manual block fetching NMS|0.44|
